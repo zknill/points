@@ -50,10 +50,10 @@ func main() {
 			Action:    points.Init,
 		},
 		{
-			Name: "history",
-			Aliases: []string{"h"},
-			Usage: "shows the command history",
-			Action: points.ShowHistory,
+			Name:    "history",
+			Aliases: []string{"p"},
+			Usage:   "shows the command history",
+			Action:  points.ShowHistory,
 		},
 	}
 	app.Run(os.Args)

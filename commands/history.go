@@ -1,8 +1,8 @@
 package points
 
 import (
-	"time"
 	"strings"
+	"time"
 )
 
 type History struct {
@@ -18,5 +18,5 @@ func (lb *Leaderboard) addHistory(command string, args ...string) {
 func (h *History) string() string {
 	t := time.Unix(0, h.Timestamp)
 	timeStr := t.Format("2006-01-02 15:04:05")
-	return timeStr + ": " + h.Message + " " +strings.Join(h.Args, " ")
+	return timeStr + ": " + h.Message + " " + strings.Join(h.Args, " ")
 }
