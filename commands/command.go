@@ -9,11 +9,11 @@ import (
 
 	"fmt"
 
-	"github.com/urfave/cli"
 	"github.com/olekukonko/tablewriter"
+	"github.com/urfave/cli"
 )
 
-const filename = "points.csv"
+const filename = "points.json"
 
 func Print(_ *cli.Context) {
 	lb := read()
@@ -23,6 +23,9 @@ func Print(_ *cli.Context) {
 func Add(c *cli.Context) {
 	lb := read()
 	name := c.Args().Get(0)
+	if name == "" {
+		return
+	}
 
 	arg1 := c.Args().Get(1)
 	var err error
@@ -41,7 +44,7 @@ func Add(c *cli.Context) {
 	if !found {
 		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number})
 	}
-	saveTable(lb)
+	lb.Save()
 }
 
 func Reset(_ *cli.Context) {
@@ -49,7 +52,7 @@ func Reset(_ *cli.Context) {
 	for _, entry := range lb.Entries {
 		entry.Points = 0
 	}
-	saveTable(lb)
+	lb.Save()
 }
 
 func Slack(_ *cli.Context) {
@@ -59,7 +62,13 @@ func Slack(_ *cli.Context) {
 	fmt.Println("```")
 }
 
-func read() (*Leaderboard) {
+func Init(_ *cli.Context) {
+	lb := &Leaderboard{}
+	lb.filename = filename
+	lb.Save()
+}
+
+func read() *Leaderboard {
 	lb := &Leaderboard{}
 	lb.Load(filename)
 	return lb
@@ -73,10 +82,6 @@ func printTable(headers []string, entries []*Entry) {
 		table.Append(entry.Array())
 	}
 	table.Render()
-}
-
-func saveTable(lb *Leaderboard) {
-	lb.Save()
 }
 
 func checkErr(err error) {

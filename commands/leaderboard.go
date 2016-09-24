@@ -1,11 +1,8 @@
 package points
 
 import (
+	"encoding/json"
 	"io/ioutil"
-	"encoding/csv"
-	"strings"
-	"io"
-	"strconv"
 	"os"
 )
 
@@ -24,35 +21,14 @@ type History struct {
 func (lb *Leaderboard) Load(filename string) {
 	lb.filename = filename
 	in, _ := ioutil.ReadFile(filename)
-	r := csv.NewReader(strings.NewReader(string(in)))
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		checkErr(err)
-		points, err := strconv.Atoi(record[1])
-		if err != nil && lb.Headers == nil {
-			lb.Headers = []string{record[0], record[1]}
-			continue
-		}
-		lb.Entries = append(lb.Entries, &Entry{record[0], points})
-	}
+	json.Unmarshal(in, &lb)
 }
 
 func (lb *Leaderboard) Save() {
-	file, err := os.Create(filename)
+	b, _ := json.Marshal(lb)
+	file, err := os.Create(lb.filename)
 	checkErr(err)
 	defer file.Close()
 
-	writer := csv.NewWriter(file)
-
-	err = writer.Write(lb.Headers)
-	checkErr(err)
-	for _, entry := range lb.Entries {
-		err := writer.Write(entry.Array())
-		checkErr(err)
-	}
-
-	defer writer.Flush()
+	file.Write(b)
 }
