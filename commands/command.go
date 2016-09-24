@@ -1,9 +1,6 @@
 package points
 
 import (
-	"encoding/csv"
-	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"sort"
@@ -19,11 +16,12 @@ import (
 const filename = "points.csv"
 
 func Print(_ *cli.Context) {
-	printTable(read())
+	lb := read()
+	printTable(lb.Headers, lb.Entries)
 }
 
 func Add(c *cli.Context) {
-	headers, entries := read()
+	lb := read()
 	name := c.Args().Get(0)
 
 	arg1 := c.Args().Get(1)
@@ -34,51 +32,37 @@ func Add(c *cli.Context) {
 		checkErr(err)
 	}
 	found := false
-	for _, entry := range entries {
+	for _, entry := range lb.Entries {
 		if strings.ToUpper(name) == strings.ToUpper(entry.Name) {
 			found = true
 			entry.Points += number
 		}
 	}
 	if !found {
-		entries = append(entries, &Entry{strings.Title(name), number})
+		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number})
 	}
-	saveTable(headers, entries)
+	saveTable(lb)
 }
 
 func Reset(_ *cli.Context) {
-	headers, entries := read()
-	for _, entry := range entries {
+	lb := read()
+	for _, entry := range lb.Entries {
 		entry.Points = 0
 	}
-	saveTable(headers, entries)
+	saveTable(lb)
 }
 
 func Slack(_ *cli.Context) {
 	fmt.Println("```")
-	printTable(read())
+	lb := read()
+	printTable(lb.Headers, lb.Entries)
 	fmt.Println("```")
 }
 
-func read() ([]string, []*Entry) {
-	in, _ := ioutil.ReadFile(filename)
-	r := csv.NewReader(strings.NewReader(string(in)))
-	entries := []*Entry{}
-	var headers []string
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		checkErr(err)
-		points, err := strconv.Atoi(record[1])
-		if err != nil {
-			headers = []string{record[0], record[1]}
-			continue
-		}
-		entries = append(entries, &Entry{record[0], points})
-	}
-	return headers, entries
+func read() (*Leaderboard) {
+	lb := &Leaderboard{}
+	lb.Load(filename)
+	return lb
 }
 
 func printTable(headers []string, entries []*Entry) {
@@ -91,21 +75,8 @@ func printTable(headers []string, entries []*Entry) {
 	table.Render()
 }
 
-func saveTable(headers []string, entries []*Entry) {
-	file, err := os.Create(filename)
-	checkErr(err)
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-
-	err = writer.Write(headers)
-	checkErr(err)
-	for _, entry := range entries {
-		err := writer.Write(entry.Array())
-		checkErr(err)
-	}
-
-	defer writer.Flush()
+func saveTable(lb *Leaderboard) {
+	lb.Save()
 }
 
 func checkErr(err error) {
