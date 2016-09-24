@@ -39,12 +39,17 @@ func Add(c *cli.Context) {
 		if strings.ToUpper(name) == strings.ToUpper(entry.Name) {
 			found = true
 			entry.Points += number
+			if len(entry.Meta) == 0 {
+				entry.Meta = meta(c)
+			} else if len(entry.Meta) > 0 && len(meta(c)) > 0 {
+				entry.Meta = meta(c)
+			}
 		}
 	}
 	if !found {
-		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number})
+		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number, meta(c)})
 	}
-	lb.addHistory("add", getArgs(c)...)
+	lb.addHistory("add", args(c)...)
 	lb.Save()
 }
 
@@ -69,7 +74,7 @@ func Init(c *cli.Context) {
 	lb.filename = filename
 	if _, err := os.Stat(lb.filename); os.IsNotExist(err) {
 		lb.Headers = append([]string{c.Args().First()}, c.Args().Tail()...)
-		lb.addHistory("init", getArgs(c)...)
+		lb.addHistory("init", args(c)...)
 		lb.Save()
 		return
 	}
@@ -105,6 +110,14 @@ func checkErr(err error) {
 	}
 }
 
-func getArgs(c *cli.Context) []string {
+func args(c *cli.Context) []string {
 	return append([]string{c.Args().First()}, c.Args().Tail()...)
+}
+
+func meta(c *cli.Context) []string {
+	meta := []string{}
+	if len(c.Args().Tail()) > 1 {
+		meta = c.Args().Tail()[1:]
+	}
+	return meta
 }

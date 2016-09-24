@@ -5,6 +5,7 @@ import "strconv"
 type Entry struct {
 	Name   string
 	Points int
+	Meta []string
 }
 
 type PointsFirst []*Entry
@@ -30,5 +31,5 @@ func (e *Entry) String() string {
 }
 
 func (e *Entry) Array() []string {
-	return []string{e.Name, strconv.Itoa(e.Points)}
+	return append([]string{e.Name, strconv.Itoa(e.Points)}, e.Meta...)
 }
