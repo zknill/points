@@ -10,9 +10,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/codegangsta/cli"
-	"github.com/olekukonko/tablewriter"
 	"fmt"
+
+	"github.com/urfave/cli"
+	"github.com/olekukonko/tablewriter"
 )
 
 const filename = "points.csv"
@@ -26,13 +27,11 @@ func Add(c *cli.Context) {
 	name := c.Args().Get(0)
 
 	arg1 := c.Args().Get(1)
-	var number int
 	var err error
+	var number = 0
 	if arg1 != "" {
 		number, err = strconv.Atoi(arg1)
 		checkErr(err)
-	} else {
-		number = 0
 	}
 	found := false
 	for _, entry := range entries {
@@ -44,7 +43,6 @@ func Add(c *cli.Context) {
 	if !found {
 		entries = append(entries, &Entry{strings.Title(name), number})
 	}
-	printTable(headers, entries)
 	saveTable(headers, entries)
 }
 
@@ -53,7 +51,6 @@ func Reset(_ *cli.Context) {
 	for _, entry := range entries {
 		entry.Points = 0
 	}
-	printTable(headers, entries)
 	saveTable(headers, entries)
 }
 
