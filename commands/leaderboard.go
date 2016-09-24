@@ -13,11 +13,6 @@ type Leaderboard struct {
 	filename string
 }
 
-type History struct {
-	Timestamp int
-	Message   string
-}
-
 func (lb *Leaderboard) Load(filename string) {
 	lb.filename = filename
 	in, _ := ioutil.ReadFile(filename)

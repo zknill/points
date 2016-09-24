@@ -43,10 +43,17 @@ func main() {
 			Action:  points.Slack,
 		},
 		{
-			Name:    "init",
-			Aliases: []string{"i"},
-			Usage:   "creates a new json file backend to store the leaderboard",
-			Action:  points.Init,
+			Name:      "init",
+			Aliases:   []string{"i"},
+			Usage:     "creates a new json file backend to store the leaderboard",
+			UsageText: "points init headers...",
+			Action:    points.Init,
+		},
+		{
+			Name: "history",
+			Aliases: []string{"h"},
+			Usage: "shows the command history",
+			Action: points.ShowHistory,
 		},
 	}
 	app.Run(os.Args)
