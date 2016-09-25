@@ -40,6 +40,8 @@ The recommended usage is `init name points` as it is assumed that the second col
 +-------+--------+-----+
 ```
 
+If column headers are passed to the init command then the defailts of `name` and `points` will be used.
+
 ####`add`
 
 `add` allows you to add points to a row or create a new row in the table.

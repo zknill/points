@@ -73,8 +73,12 @@ func Init(c *cli.Context) {
 	lb := &Leaderboard{}
 	lb.filename = filename
 	if _, err := os.Stat(lb.filename); os.IsNotExist(err) {
-		lb.Headers = append([]string{c.Args().First()}, c.Args().Tail()...)
-		lb.addHistory("init", args(c)...)
+		var headers []string
+		if headers = args(c); headers[0] == "" {
+			headers = []string{"name", "points"}
+		}
+		lb.Headers = headers
+		lb.addHistory("init", headers...)
 		lb.Save()
 		return
 	}
