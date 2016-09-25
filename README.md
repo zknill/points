@@ -40,7 +40,7 @@ The recommended usage is `init name points` as it is assumed that the second col
 +-------+--------+-----+
 ```
 
-If column headers are passed to the init command then the defailts of `name` and `points` will be used.
+If no column headers are passed to the init command then the defaults of `name` and `points` will be used.
 
 ####`add`
 
