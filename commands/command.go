@@ -36,7 +36,7 @@ func Add(c *cli.Context) {
 	}
 	found := false
 	for _, entry := range lb.Entries {
-		if strings.ToUpper(name) == strings.ToUpper(entry.Name) {
+		if strings.EqualFold(name, entry.Name) {
 			found = true
 			entry.Points += number
 			if len(lb.Headers)> 2 {
@@ -49,16 +49,26 @@ func Add(c *cli.Context) {
 		}
 	}
 	if !found {
-		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number, meta(c)})
+		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number, meta(c)[:len(lb.Headers) - 2]})
 	}
-	lb.addHistory("add", args(c)...)
+	lb.addHistory("add", args(c)[:len(lb.Headers)]...)
 	lb.Save()
 }
 
-func Reset(_ *cli.Context) {
+func Reset(c *cli.Context) {
 	lb := read()
-	for _, entry := range lb.Entries {
-		entry.Points = 0
+	flag := c.String("entry")
+	if flag == "all" {
+		for _, entry := range lb.Entries {
+			entry.Points = 0
+		}
+	} else {
+		for _, entry := range lb.Entries {
+			if strings.EqualFold(entry.Name, flag) {
+				entry.Points = 0
+				break
+			}
+		}
 	}
 	lb.addHistory("reset")
 	lb.Save()

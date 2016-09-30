@@ -33,8 +33,15 @@ func main() {
 		{
 			Name:    "reset",
 			Aliases: []string{"r"},
-			Usage:   "resets all the points of the team members back to 0",
+			Usage:   "resets all the points of the team members or specific member back to 0",
 			Action:  points.Reset,
+			Flags: []cli.Flag {
+				cli.StringFlag{
+					Name: "entry",
+					Value: "all",
+					Usage: "entry to reset",
+				},
+			},
 		},
 		{
 			Name:    "slack",
