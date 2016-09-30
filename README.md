@@ -24,23 +24,21 @@ The table is ordered by who has the most points in the points column, and then a
 
 ####`init`
 
-`init` allows your to create a leaderboard.
+`init` allows your to create a leaderboard. If no column names are specified then the defaults of `name` and `points` are used.
 
 Calling `init` with the names of the columns for the leaderboard, the `init` command creates a file `points.json` in the current directory.
 
 The recommended usage is `init name points` as it is assumed that the second column will be the number of points. However other meta data can be passed to init.
 
-`init name points DQ` could be used to set up a table that looked like this:
+`init name points meta` could be used to set up a table that looked like this:
 ```
-+-------+--------+-----+
-| NAME  | POINTS | DQ  |
-+-------+--------+-----+
-| Alice |     10 | no  |
-| Bob   |      0 | yes |
-+-------+--------+-----+
++-------+--------+------+
+| NAME  | POINTS | META |
++-------+--------+------+
+| Alice |     10 | yes  |
+| Bob   |      5 | no   |
++-------+--------+------+
 ```
-
-If no column headers are passed to the init command then the defaults of `name` and `points` will be used.
 
 ####`add`
 
@@ -60,6 +58,14 @@ For the table:
 If you set up your leaderboard to have meta data after the points column, pass that after the points.
 
 `add points bob 5 yes`
+
+```
++-------+--------+------+
+| NAME  | POINTS | META |
++-------+--------+------+
+| Bob   |      5 | yes  |
++-------+--------+------+
+```
 
 ####`list`
 

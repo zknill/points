@@ -39,10 +39,12 @@ func Add(c *cli.Context) {
 		if strings.ToUpper(name) == strings.ToUpper(entry.Name) {
 			found = true
 			entry.Points += number
-			if len(entry.Meta) == 0 {
-				entry.Meta = meta(c)
-			} else if len(entry.Meta) > 0 && len(meta(c)) > 0 {
-				entry.Meta = meta(c)
+			if len(lb.Headers)> 2 {
+				meta := meta(c)[:len(lb.Headers) - 2]
+				if meta == nil {
+					meta = []string{}
+				}
+				entry.Meta = meta
 			}
 		}
 	}
