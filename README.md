@@ -79,6 +79,10 @@ If you set up your leaderboard to have meta data after the points column, pass t
 
 `reset` clears all the scores from the leaderboard but keeps the names in the table.
 
+a single entry in the table can be reset using the `--entry` flag to the reset command.
+
+`reset --entry bob`
+
 ####`history`
 
 `history` shows the times and commands run.
