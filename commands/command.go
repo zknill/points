@@ -1,27 +1,28 @@
 package points
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 
-	"fmt"
-
 	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli"
+	"golang.org/x/net/context"
 )
 
-const filename = "points.json"
+const Filename = "/Users/zak/gopath/src/github.com/zknill/points/points.json"
 
 func Print(_ *cli.Context) {
-	lb := read()
-	printTable(lb)
+	lb := Read()
+	PrintTable(nil, lb)
 }
 
 func Add(c *cli.Context) {
-	lb := read()
+	lb := Read()
 	name := c.Args().Get(0)
 	if name == "" {
 		return
@@ -34,7 +35,7 @@ func Add(c *cli.Context) {
 	} else {
 		arg1 := c.Args().Get(1)
 		var err error
-		
+
 		if arg1 != "" {
 			number, err = strconv.Atoi(arg1)
 			checkErr(err)
@@ -46,7 +47,7 @@ func Add(c *cli.Context) {
 		if strings.EqualFold(name, entry.Name) {
 			found = true
 			entry.Points += number
-			if len(lb.Headers)> 2 {
+			if len(lb.Headers) > 2 {
 				meta := meta(c)[:len(lb.Headers) - 2]
 				if meta == nil {
 					meta = []string{}
@@ -63,7 +64,7 @@ func Add(c *cli.Context) {
 }
 
 func Reset(c *cli.Context) {
-	lb := read()
+	lb := Read()
 	flag := c.String("entry")
 	if flag == "all" {
 		for _, entry := range lb.Entries {
@@ -83,15 +84,15 @@ func Reset(c *cli.Context) {
 
 func Slack(_ *cli.Context) {
 	fmt.Println("```")
-	lb := read()
-	printTable(lb)
+	lb := Read()
+	PrintTable(nil, lb)
 	fmt.Println("```")
 }
 
-func Init(c *cli.Context) {
+func InitStorage(c *cli.Context) {
 	lb := &Leaderboard{}
-	lb.filename = filename
-	if _, err := os.Stat(lb.filename); os.IsNotExist(err) {
+	lb.Key = Filename
+	if _, err := os.Stat(lb.Key); os.IsNotExist(err) {
 		var headers []string
 		if headers = args(c); headers[0] == "" {
 			headers = []string{"name", "points"}
@@ -105,26 +106,31 @@ func Init(c *cli.Context) {
 }
 
 func ShowHistory(c *cli.Context) {
-	lb := read()
+	lb := Read()
 	for _, h := range lb.History {
-		fmt.Println(h.string())
+		fmt.Println(h.String())
 	}
 }
 
-func read() *Leaderboard {
+func Read() *Leaderboard {
 	lb := &Leaderboard{}
-	lb.Load(filename)
+	lb.Load(Filename)
 	return lb
 }
 
-func printTable(lb *Leaderboard) {
+func PrintTable(_ context.Context, lb *Leaderboard) {
+	table := GetTable(os.Stdout, lb)
+	table.Render()
+}
+
+func GetTable(writer io.Writer, lb *Leaderboard) *tablewriter.Table {
 	sort.Sort(PointsFirst(lb.Entries))
-	table := tablewriter.NewWriter(os.Stdout)
+	table := tablewriter.NewWriter(writer)
 	table.SetHeader(lb.Headers)
 	for _, entry := range lb.Entries {
 		table.Append(entry.Array())
 	}
-	table.Render()
+	return table
 }
 
 func checkErr(err error) {
