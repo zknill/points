@@ -35,9 +35,9 @@ func main() {
 			Aliases: []string{"r"},
 			Usage:   "resets all the points of the team members or specific member back to 0",
 			Action:  points.Reset,
-			Flags: []cli.Flag {
+			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name: "entry",
+					Name:  "entry",
 					Value: "all",
 					Usage: "entry to reset",
 				},
@@ -54,7 +54,7 @@ func main() {
 			Aliases:   []string{"i"},
 			Usage:     "creates a new json file backend to store the leaderboard",
 			UsageText: "points init headers...",
-			Action:    points.Init,
+			Action:    points.InitStorage,
 		},
 		{
 			Name:    "history",
