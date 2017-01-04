@@ -27,13 +27,20 @@ func Add(c *cli.Context) {
 		return
 	}
 
-	arg1 := c.Args().Get(1)
-	var err error
 	var number = 0
-	if arg1 != "" {
-		number, err = strconv.Atoi(arg1)
-		checkErr(err)
+
+	if len(c.Args()) == 1 {
+		number = 1
+	} else {
+		arg1 := c.Args().Get(1)
+		var err error
+		
+		if arg1 != "" {
+			number, err = strconv.Atoi(arg1)
+			checkErr(err)
+		}
 	}
+
 	found := false
 	for _, entry := range lb.Entries {
 		if strings.EqualFold(name, entry.Name) {
@@ -51,7 +58,7 @@ func Add(c *cli.Context) {
 	if !found {
 		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number, meta(c)[:len(lb.Headers) - 2]})
 	}
-	lb.addHistory("add", args(c)[:len(lb.Headers)]...)
+	lb.addHistory("add", name, strconv.Itoa(number))
 	lb.Save()
 }
 
