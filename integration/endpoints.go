@@ -18,10 +18,14 @@ type slashResponse struct {
 	Text         string `json:"text"`
 }
 
+// LEADERBOARD const for the leaderboard datastore key
 const LEADERBOARD string = "leaderboard"
-const ENTRY string = "entry"
-const token string = "mfuioz26Y0MAYuh7IPkrpeg4"
 
+// ENTRY const for the entry datastore key
+const ENTRY string = "entry"
+const token string = ""
+
+// Run the webapp
 func Run() {
 	http.HandleFunc("/command", handleCommand)
 }
