@@ -2,10 +2,9 @@ package points
 
 import (
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"strings"
-
-	"fmt"
 
 	"github.com/zknill/points/commands"
 	"golang.org/x/net/context"
@@ -40,16 +39,17 @@ func hash(s string) int64 {
 
 func getEntries(ctx context.Context) (*[]*points.Entry, error) {
 	log.Infof(ctx, "attempt to get entry from storage")
-	entrySlice := new([]*points.Entry)
+	entries := new([]*points.Entry)
 
 	q := datastore.NewQuery(ENTRY).Order("-Points")
 
-	if _, err := q.GetAll(ctx, entrySlice); err != nil {
+	if _, err := q.GetAll(ctx, entries); err != nil {
 		message := "get all entries failed. Error: " + err.Error()
 		log.Errorf(ctx, message)
 		return nil, errors.New(message)
 	}
-	return entrySlice, nil
+	log.Infof(ctx, fmt.Sprintf("successfully retrieved %d entries from storage", len(*entries)))
+	return entries, nil
 }
 
 func getLeaderboard(ctx context.Context) (*points.StoredLeaderboard, error) {

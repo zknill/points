@@ -2,6 +2,7 @@ package points
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -39,28 +40,28 @@ func (lb *Leaderboard) Save() {
 	file.Write(b)
 }
 
-func (lb *Leaderboard) Add(name, pnts string, meta []string) {
+func (lb *Leaderboard) Add(name, pnts string) error {
+	var returnErr error
 	var err error
-	var number = 0
-	if pnts != "" {
-		number, err = strconv.Atoi(pnts)
-		checkErr(err)
+	var number int
+	if number, err = strconv.Atoi(pnts); err != nil {
+		returnErr = argError{
+			message: fmt.Sprintf("arg '%s' cannot be converted into an int, using 1", pnts),
+			err:     err,
+		}
+		number = 1
 	}
 	found := false
+
 	for _, entry := range lb.Entries {
 		if strings.EqualFold(name, entry.Name) {
 			found = true
 			entry.Points += number
-			if len(lb.Headers) > 2 {
-				newMeta := meta[:len(lb.Headers)-2]
-				if newMeta == nil {
-					newMeta = []string{}
-				}
-				entry.Meta = newMeta
-			}
+			break
 		}
 	}
 	if !found {
-		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number, meta})
+		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number})
 	}
+	return returnErr
 }

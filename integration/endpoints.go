@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
 	"github.com/zknill/points/commands"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
@@ -44,7 +45,12 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 	case match(c, "init"):
 		rtext = initBoard(ctx, commands)
 	case match(c, "add"):
-		rtext = add(ctx, commands)
+		log.Infof(ctx, fmt.Sprintf("adding to %s, request: %s", commands[1], r))
+		if strings.EqualFold(commands[1], r.Form.Get("user_name")) {
+			rtext = "awww man! you cannot add points to yourself."
+		} else {
+			rtext = add(ctx, commands)
+		}
 	}
 
 	resp := &slashResponse{
@@ -96,10 +102,12 @@ func initBoard(ctx context.Context, commands []string) (rtext string) {
 }
 
 func add(ctx context.Context, commands []string) string {
+	// commands{cmd, name, num}
 	if len(commands) != 2 {
 		return "aww man! please use the format `/points add slackbot`"
 	}
 	lb := &points.Leaderboard{}
+	name := commands[1]
 	if slb, err := getLeaderboard(ctx); err == nil {
 		lb.Headers = slb.Headers
 	}
@@ -110,11 +118,14 @@ func add(ctx context.Context, commands []string) string {
 		return err.Error()
 	}
 
-	lb.Add(commands[1], commands[2], nil)
+	if err := lb.Add(name, "1"); err != nil {
+		log.Debugf(ctx, err.Error())
+	}
+
 	for _, entry := range lb.Entries {
 		storeEntry(ctx, entry)
 	}
-	return fmt.Sprintf("alright! added %s points to %s", commands[2], commands[1])
+	return fmt.Sprintf("alright! added 1 point to %s", commands[1])
 }
 
 func match(command, matcher string) bool {

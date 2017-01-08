@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -27,39 +26,9 @@ func Add(c *cli.Context) {
 	if name == "" {
 		return
 	}
-
-	var number = 0
-
-	if len(c.Args()) == 1 {
-		number = 1
-	} else {
-		arg1 := c.Args().Get(1)
-		var err error
-
-		if arg1 != "" {
-			number, err = strconv.Atoi(arg1)
-			checkErr(err)
-		}
-	}
-
-	found := false
-	for _, entry := range lb.Entries {
-		if strings.EqualFold(name, entry.Name) {
-			found = true
-			entry.Points += number
-			if len(lb.Headers) > 2 {
-				meta := meta(c)[:len(lb.Headers) - 2]
-				if meta == nil {
-					meta = []string{}
-				}
-				entry.Meta = meta
-			}
-		}
-	}
-	if !found {
-		lb.Entries = append(lb.Entries, &Entry{strings.Title(name), number, meta(c)[:len(lb.Headers) - 2]})
-	}
-	lb.addHistory("add", name, strconv.Itoa(number))
+	pnts := c.Args().Get(1)
+	lb.Add(name, pnts)
+	lb.addHistory("add", args(c)[:len(lb.Headers)]...)
 	lb.Save()
 }
 
@@ -124,7 +93,7 @@ func PrintTable(_ context.Context, lb *Leaderboard) {
 }
 
 func GetTable(writer io.Writer, lb *Leaderboard) *tablewriter.Table {
-	sort.Sort(PointsFirst(lb.Entries))
+	sort.Sort(ScoreFirst(lb.Entries))
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader(lb.Headers)
 	for _, entry := range lb.Entries {
@@ -141,12 +110,4 @@ func checkErr(err error) {
 
 func args(c *cli.Context) []string {
 	return append([]string{c.Args().First()}, c.Args().Tail()...)
-}
-
-func meta(c *cli.Context) []string {
-	meta := []string{}
-	if len(c.Args().Tail()) > 1 {
-		meta = c.Args().Tail()[1:]
-	}
-	return meta
 }
