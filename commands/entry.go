@@ -5,20 +5,19 @@ import "strconv"
 type Entry struct {
 	Name   string
 	Points int
-	Meta []string
 }
 
-type PointsFirst []*Entry
+type ScoreFirst []*Entry
 
-func (e PointsFirst) Len() int {
+func (e ScoreFirst) Len() int {
 	return len(e)
 }
 
-func (e PointsFirst) Swap(i, j int) {
+func (e ScoreFirst) Swap(i, j int) {
 	e[i], e[j] = e[j], e[i]
 }
 
-func (e PointsFirst) Less(i, j int) bool {
+func (e ScoreFirst) Less(i, j int) bool {
 	if e[j].Points > 0 || e[i].Points > 0 {
 		return e[i].Points > e[j].Points
 	}
@@ -26,10 +25,10 @@ func (e PointsFirst) Less(i, j int) bool {
 }
 
 func (e *Entry) String() string {
-	pointsStr := strconv.Itoa(e.Points)
-	return e.Name + ": " + pointsStr
+	score := strconv.Itoa(e.Points)
+	return e.Name + ": " + score
 }
 
 func (e *Entry) Array() []string {
-	return append([]string{e.Name, strconv.Itoa(e.Points)}, e.Meta...)
+	return append([]string{e.Name, strconv.Itoa(e.Points)})
 }
