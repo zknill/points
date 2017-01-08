@@ -13,13 +13,16 @@ import (
 	"golang.org/x/net/context"
 )
 
-const Filename = "/Users/zak/gopath/src/github.com/zknill/points/points.json"
+// Filename represents where to store the cli app's backend file
+const Filename = "./points.json"
 
+// Print leaderboard to console
 func Print(_ *cli.Context) {
 	lb := Read()
 	PrintTable(nil, lb)
 }
 
+// Add points to members
 func Add(c *cli.Context) {
 	lb := Read()
 	name := c.Args().Get(0)
@@ -32,6 +35,7 @@ func Add(c *cli.Context) {
 	lb.Save()
 }
 
+// Reset points for all or a single member
 func Reset(c *cli.Context) {
 	lb := Read()
 	flag := c.String("entry")
@@ -51,6 +55,7 @@ func Reset(c *cli.Context) {
 	lb.Save()
 }
 
+// Slack print table in a slack friendly way
 func Slack(_ *cli.Context) {
 	fmt.Println("```")
 	lb := Read()
@@ -58,6 +63,7 @@ func Slack(_ *cli.Context) {
 	fmt.Println("```")
 }
 
+// InitStorage creates a new storage file backend
 func InitStorage(c *cli.Context) {
 	lb := &Leaderboard{}
 	lb.Key = Filename
@@ -74,6 +80,7 @@ func InitStorage(c *cli.Context) {
 	log.Fatal("A leaderboard already exists in this directory")
 }
 
+// ShowHistory prints the history to console
 func ShowHistory(c *cli.Context) {
 	lb := Read()
 	for _, h := range lb.History {
@@ -81,17 +88,20 @@ func ShowHistory(c *cli.Context) {
 	}
 }
 
+// Read loads the leaderboard from file into memory
 func Read() *Leaderboard {
 	lb := &Leaderboard{}
 	lb.Load(Filename)
 	return lb
 }
 
+// PrintTable prints the table to console
 func PrintTable(_ context.Context, lb *Leaderboard) {
 	table := GetTable(os.Stdout, lb)
 	table.Render()
 }
 
+// GetTable the table from the leaderboard
 func GetTable(writer io.Writer, lb *Leaderboard) *tablewriter.Table {
 	sort.Sort(ScoreFirst(lb.Entries))
 	table := tablewriter.NewWriter(writer)

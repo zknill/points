@@ -5,6 +5,7 @@ type argError struct {
 	err     error
 }
 
+// Error implements the error interface
 func (e argError) Error() string {
 	return e.message
 }

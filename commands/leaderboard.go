@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Leaderboard stores the points and names
 type Leaderboard struct {
 	Headers []string
 	Entries []*Entry
@@ -17,10 +18,12 @@ type Leaderboard struct {
 	Key     string
 }
 
+// StoredLeaderboard stored in datastore
 type StoredLeaderboard struct {
 	Headers []string
 }
 
+// Load leaderboard from file
 func (lb *Leaderboard) Load(filename string) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		log.Fatal("Leaderboard '" + filename + "' not yet initialised!")
@@ -31,6 +34,7 @@ func (lb *Leaderboard) Load(filename string) {
 	json.Unmarshal(in, &lb)
 }
 
+// Save leaderboard to file
 func (lb *Leaderboard) Save() {
 	b, _ := json.Marshal(lb)
 	file, err := os.Create(lb.Key)
@@ -40,6 +44,7 @@ func (lb *Leaderboard) Save() {
 	file.Write(b)
 }
 
+// Add points to an entry
 func (lb *Leaderboard) Add(name, pnts string) error {
 	var returnErr error
 	var err error
