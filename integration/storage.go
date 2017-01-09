@@ -3,7 +3,6 @@ package points
 import (
 	"errors"
 	"fmt"
-	"hash/fnv"
 	"strings"
 
 	"github.com/zknill/points/commands"
@@ -13,10 +12,8 @@ import (
 )
 
 func storeEntry(ctx context.Context, entry *points.Entry) error {
-	log.Infof(ctx, "Attempt to put entries into storage")
-	h := hash(entry.Name)
-	log.Infof(ctx, fmt.Sprintf("entry name %s hash %v", entry.Name, h))
-	key := datastore.NewKey(ctx, ENTRY, entry.Name, 0, nil)
+	log.Infof(ctx, "storing entry name %s", entry.Name)
+	key := entryKey(ctx, entry.Name)
 
 	if _, err := datastore.Put(ctx, key, entry); err != nil {
 		message := fmt.Sprintf("put entry in storage failed, error %s", err.Error())
@@ -25,16 +22,6 @@ func storeEntry(ctx context.Context, entry *points.Entry) error {
 	}
 	log.Infof(ctx, "Successfully put entry in storage")
 	return nil
-}
-
-func hash(s string) int64 {
-	h := fnv.New32a()
-	h.Write([]byte(s))
-	n := int32(h.Sum32())
-	if n < 0 {
-		return int64(^uint32(n - 1))
-	}
-	return int64(n)
 }
 
 func getEntries(ctx context.Context) (*[]*points.Entry, error) {
@@ -50,6 +37,20 @@ func getEntries(ctx context.Context) (*[]*points.Entry, error) {
 	}
 	log.Infof(ctx, fmt.Sprintf("successfully retrieved %d entries from storage", len(*entries)))
 	return entries, nil
+}
+
+func getEntry(ctx context.Context, name string) (*points.Entry, error) {
+	log.Infof(ctx, "attempt to get entry for name '%s'", name)
+
+	key := entryKey(ctx, name)
+	entry := &points.Entry{}
+	if err := datastore.Get(ctx, key, entry); err != nil {
+		log.Errorf(ctx, "failed to get entry name: '%s', key: '%s'", name, key)
+		return nil, err
+	}
+
+	log.Infof(ctx, "found entry '%s'", entry)
+	return entry, nil
 }
 
 func getLeaderboard(ctx context.Context) (*points.StoredLeaderboard, error) {
@@ -85,4 +86,8 @@ func initLeaderboard(ctx context.Context, headers []string) error {
 		return errors.New(message)
 	}
 	return nil
+}
+
+func entryKey(ctx context.Context, entry string) *datastore.Key {
+	return datastore.NewKey(ctx, ENTRY, strings.Title(entry), 0, nil)
 }
