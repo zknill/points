@@ -110,26 +110,19 @@ func add(ctx context.Context, commands []string) string {
 	if len(commands) != 2 {
 		return "aww man! please use the format `/points add slackbot`"
 	}
-	lb := &points.Leaderboard{}
+
 	name := commands[1]
-	if slb, err := getLeaderboard(ctx); err == nil {
-		lb.Headers = slb.Headers
-	}
 
-	if slice, err := getEntries(ctx); slice != nil {
-		lb.Entries = *slice
+	if entry, err := getEntry(ctx, name); err != nil {
+		log.Warningf(ctx, "failed getting entry for name '%s', error: %s", name, err.Error())
 	} else {
-		return err.Error()
-	}
-
-	if err := lb.Add(name, "1"); err != nil {
-		log.Debugf(ctx, err.Error())
-	}
-
-	for _, entry := range lb.Entries {
+		log.Infof(ctx, "found entry using new method: %s", entry)
+		entry.Points++
 		storeEntry(ctx, entry)
+		return fmt.Sprintf("alright! added 1 point to %s", commands[1])
 	}
-	return fmt.Sprintf("alright! added 1 point to %s", commands[1])
+
+	return fmt.Sprintf("awwww man! something went wrong adding 1 point to %s", commands[1])
 }
 
 func match(command, matcher string) bool {
