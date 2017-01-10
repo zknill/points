@@ -112,17 +112,16 @@ func add(ctx context.Context, commands []string) string {
 	}
 
 	name := commands[1]
-
-	if entry, err := getEntry(ctx, name); err != nil {
-		log.Warningf(ctx, "failed getting entry for name '%s', error: %s", name, err.Error())
+	entry, err := getEntry(ctx, name)
+	if err != nil {
+		log.Infof(ctx, "failed getting entry for name '%s', error: %s", name, err.Error())
+		entry = &points.Entry{Name: strings.Title(name), Points: 1}
 	} else {
 		log.Infof(ctx, "found entry using new method: %s", entry)
 		entry.Points++
-		storeEntry(ctx, entry)
-		return fmt.Sprintf("alright! added 1 point to %s", commands[1])
 	}
-
-	return fmt.Sprintf("awwww man! something went wrong adding 1 point to %s", commands[1])
+	storeEntry(ctx, entry)
+	return fmt.Sprintf("alright! added a point to %s", strings.Title(commands[1]))
 }
 
 func match(command, matcher string) bool {
