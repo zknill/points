@@ -49,7 +49,7 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 	case match(c, "init"):
 		rtext = initBoard(ctx, commands)
 	case match(c, "add"):
-		log.Infof(ctx, fmt.Sprintf("adding to %s, request: %s", commands[1], r))
+		log.Infof(ctx, fmt.Sprintf("adding to %s", commands[1]))
 		if strings.EqualFold(commands[1], r.Form.Get("user_name")) {
 			rtext = "awww man! you cannot add points to yourself."
 		} else {

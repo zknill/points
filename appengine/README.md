@@ -6,7 +6,12 @@ The google app engine allows the points slackbot to be easily hosted and deploye
 ## Development
 Install the google app engine development plugin and then from inside this dir:
 
-`gooapp serve --host=0.0.0.0`
+`goapp serve --host=0.0.0.0`
+
+## Tests
+The tests use the app engine testing package and can be run with all the normal go test flags:
+
+`goapp test`
 
 ## Deployment
 To deploy the app
