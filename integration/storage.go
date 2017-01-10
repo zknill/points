@@ -12,6 +12,9 @@ import (
 )
 
 func storeEntry(ctx context.Context, entry *points.Entry) error {
+	if entry == nil || entry.Name == "" {
+		return fmt.Errorf("entry is not valid, %s", entry)
+	}
 	log.Infof(ctx, "storing entry name %s", entry.Name)
 	key := entryKey(ctx, entry.Name)
 
@@ -20,18 +23,18 @@ func storeEntry(ctx context.Context, entry *points.Entry) error {
 		log.Errorf(ctx, message)
 		return errors.New(message)
 	}
-	log.Infof(ctx, "Successfully put entry in storage")
+	log.Infof(ctx, "successfully put entry in storage")
 	return nil
 }
 
 func getEntries(ctx context.Context) (*[]*points.Entry, error) {
-	log.Infof(ctx, "attempt to get entry from storage")
+	log.Infof(ctx, "attempt to get entries from storage")
 	entries := new([]*points.Entry)
 
 	q := datastore.NewQuery(ENTRY).Order("-Points")
 
 	if _, err := q.GetAll(ctx, entries); err != nil {
-		message := "get all entries failed. Error: " + err.Error()
+		message := "get all entries failed. error: " + err.Error()
 		log.Errorf(ctx, message)
 		return nil, errors.New(message)
 	}
@@ -40,6 +43,9 @@ func getEntries(ctx context.Context) (*[]*points.Entry, error) {
 }
 
 func getEntry(ctx context.Context, name string) (*points.Entry, error) {
+	if name == "" {
+		return nil, errors.New("name is empty")
+	}
 	log.Infof(ctx, "attempt to get entry for name '%s'", name)
 
 	key := entryKey(ctx, name)
