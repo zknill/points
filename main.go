@@ -63,5 +63,5 @@ func main() {
 			Action:  points.ShowHistory,
 		},
 	}
-	app.Run(os.Args)
+	_ = app.Run(os.Args)
 }

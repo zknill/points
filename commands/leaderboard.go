@@ -31,7 +31,7 @@ func (lb *Leaderboard) Load(filename string) {
 
 	lb.Key = filename
 	in, _ := ioutil.ReadFile(filename)
-	json.Unmarshal(in, &lb)
+	_ = json.Unmarshal(in, &lb)
 }
 
 // Save leaderboard to file
@@ -39,9 +39,11 @@ func (lb *Leaderboard) Save() {
 	b, _ := json.Marshal(lb)
 	file, err := os.Create(lb.Key)
 	checkErr(err)
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
-	file.Write(b)
+	_, _ = file.Write(b)
 }
 
 // Add points to an entry

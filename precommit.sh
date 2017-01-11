@@ -11,4 +11,4 @@ fi
 
 
 echo "Running gometalinter..."
-gometalinter -D gotype -D errcheck -D dupl ./... --deadline=120s
+gometalinter -D gotype ./... --deadline=120s

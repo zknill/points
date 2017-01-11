@@ -84,12 +84,10 @@ func list(ctx context.Context) (rtext string) {
 	}
 
 	if slice, err := getEntries(ctx); slice != nil {
-		for _, s := range *slice {
-			rtext += s.String() + " "
-		}
 		lb.Entries = *slice
 	} else {
-		return err.Error()
+		log.Warningf(ctx, "something went wrong getting entries, error: %s", err.Error())
+		return "awww man! something went wrong..."
 	}
 
 	rtext = getResponseText(lb)
@@ -99,7 +97,10 @@ func list(ctx context.Context) (rtext string) {
 func initBoard(ctx context.Context, commands []string) (rtext string) {
 	rtext = "leaderboard exists!"
 	if _, err := getLeaderboard(ctx); err != nil {
-		initLeaderboard(ctx, commands[1:])
+		if initErr := initLeaderboard(ctx, commands[1:]); err != nil {
+			log.Warningf(ctx, "failed to init leaderboard, error: %s", initErr.Error())
+			return "awww man! something went wrong setting up your leaderboard..."
+		}
 		rtext = "alright! new leaderboard"
 	}
 	return
@@ -120,7 +121,9 @@ func add(ctx context.Context, commands []string) string {
 		log.Infof(ctx, "found entry using new method: %s", entry)
 		entry.Points++
 	}
-	storeEntry(ctx, entry)
+	if err := storeEntry(ctx, entry); err != nil {
+		return fmt.Sprintf("awww man! something went wrong adding a point to %s", strings.Title(name))
+	}
 	return fmt.Sprintf("alright! added a point to %s", strings.Title(commands[1]))
 }
 

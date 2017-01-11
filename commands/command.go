@@ -30,7 +30,7 @@ func Add(c *cli.Context) {
 		return
 	}
 	pnts := c.Args().Get(1)
-	lb.Add(name, pnts)
+	_ = lb.Add(name, pnts)
 	lb.addHistory("add", args(c)[:len(lb.Headers)]...)
 	lb.Save()
 }
