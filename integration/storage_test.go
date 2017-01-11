@@ -180,7 +180,7 @@ func Test_getLeaderboard(t *testing.T) {
 	//	},
 	}
 	for _, tt := range tests {
-		initLeaderboard(tt.args.ctx, tt.want.Headers)
+		_ = initLeaderboard(tt.args.ctx, tt.want.Headers)
 		got, err := getLeaderboard(tt.args.ctx)
 		if (err != nil) != tt.wantErr {
 			t.Errorf("%q. getLeaderboard() error = %v, wantErr %v", tt.name, err, tt.wantErr)
