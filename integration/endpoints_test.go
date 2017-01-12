@@ -1,12 +1,10 @@
 package points
 
 import (
-	"log"
 	"testing"
 
 	"github.com/zknill/points/commands"
 	"golang.org/x/net/context"
-	"google.golang.org/appengine/aetest"
 )
 
 func Test_getResponseText(t *testing.T) {
@@ -72,12 +70,6 @@ func Test_getResponseText(t *testing.T) {
 }
 
 func Test_add(t *testing.T) {
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer done()
-
 	type args struct {
 		ctx      context.Context
 		commands []string
