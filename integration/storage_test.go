@@ -13,12 +13,6 @@ import (
 )
 
 func Test_storeEntry_getEntry(t *testing.T) {
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer done()
-
 	type args struct {
 		ctx   context.Context
 		entry *points.Entry
@@ -98,11 +92,6 @@ func Test_storeEntry_getEntry(t *testing.T) {
 }
 
 func Test_getEntries(t *testing.T) {
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer done()
 
 	type args struct {
 		ctx context.Context
@@ -193,11 +182,6 @@ func Test_getLeaderboard(t *testing.T) {
 }
 
 func Test_initLeaderboard(t *testing.T) {
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer done()
 
 	if lb, err := getLeaderboard(ctx); err == nil {
 		log.Fatalf("leaderboard should not exist, leaderboard: %s", lb)
@@ -229,11 +213,6 @@ func Test_initLeaderboard(t *testing.T) {
 }
 
 func Test_entryKey(t *testing.T) {
-	ctx, done, err := aetest.NewContext()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer done()
 
 	type args struct {
 		ctx   context.Context
