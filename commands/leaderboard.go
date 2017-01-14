@@ -24,13 +24,12 @@ type StoredLeaderboard struct {
 }
 
 // Load leaderboard from file
-func (lb *Leaderboard) Load(filename string) {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		log.Fatal("Leaderboard '" + filename + "' not yet initialised!")
+func (lb *Leaderboard) Load() {
+	if _, err := os.Stat(lb.Key); os.IsNotExist(err) {
+		log.Fatal("Leaderboard '" + lb.Key + "' not yet initialised!")
 	}
 
-	lb.Key = filename
-	in, _ := ioutil.ReadFile(filename)
+	in, _ := ioutil.ReadFile(lb.Key)
 	_ = json.Unmarshal(in, &lb)
 }
 
@@ -38,7 +37,9 @@ func (lb *Leaderboard) Load(filename string) {
 func (lb *Leaderboard) Save() {
 	b, _ := json.Marshal(lb)
 	file, err := os.Create(lb.Key)
-	checkErr(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer func() {
 		_ = file.Close()
 	}()
