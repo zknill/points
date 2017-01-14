@@ -63,5 +63,11 @@ func main() {
 			Action:  points.ShowHistory,
 		},
 	}
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "file, f",
+			Usage: "Location of backend `FILE`",
+		},
+	}
 	_ = app.Run(os.Args)
 }
