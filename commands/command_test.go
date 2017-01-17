@@ -105,7 +105,9 @@ func newApp(file string, cmds []string) *cli.Context {
 	}
 	set := flag.NewFlagSet("test", 3)
 	set.String("file", file, "")
-	set.Parse(cmds)
+	if err := set.Parse(cmds); err != nil {
+		log.Fatalf("error on setup, %s", err.Error())
+	}
 	return cli.NewContext(app, set, nil)
 }
 
@@ -119,7 +121,7 @@ func lbSetup(key string) *Leaderboard {
 		if err != nil {
 			log.Fatalf("error on setup of test leaderboard, key: %s, error: %s", key, err.Error())
 		}
-		file.Close()
+		_ = file.Close()
 	}
 	lb := &Leaderboard{
 		Key:     key,

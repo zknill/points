@@ -90,7 +90,7 @@ func Test_add(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		if got := add(tt.args.ctx, tt.args.commands); got != tt.want {
+		if got := add(tt.args.ctx, "", tt.args.commands...); got != tt.want {
 			t.Errorf("%q. add() = %v, want %v", tt.name, got, tt.want)
 		}
 	}
