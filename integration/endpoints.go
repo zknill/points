@@ -25,6 +25,8 @@ const LEADERBOARD string = "leaderboard"
 const ENTRY string = "entry"
 const token string = ""
 
+type operation func(ctx context.Context, user string, commands ...string) string
+
 // Run the webapp
 func Run() {
 	http.HandleFunc("/command", handleCommand)
@@ -38,24 +40,12 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "application/json")
 	ctx := appengine.NewContext(r)
-	var rtext string
+
 	cmdStr := strings.Replace(r.PostFormValue("text"), "  ", " ", -1)
 	commands := strings.Split(cmdStr, " ")
+	user := r.Form.Get("user_name")
 
-	c := commands[0]
-	switch {
-	case match(c, "list"):
-		rtext = list(ctx)
-	case match(c, "init"):
-		rtext = initBoard(ctx, commands)
-	case match(c, "add"):
-		log.Infof(ctx, fmt.Sprintf("adding to %s", commands[1]))
-		if strings.EqualFold(commands[1], r.Form.Get("user_name")) {
-			rtext = "awww man! you cannot add points to yourself."
-		} else {
-			rtext = add(ctx, commands)
-		}
-	}
+	rtext := matcher(commands[0])(ctx, user, commands...)
 
 	resp := &slashResponse{
 		ResponseType: "in_channel",
@@ -77,7 +67,7 @@ func getResponseText(lb *points.Leaderboard) string {
 	return "```" + buffer.String() + "```"
 }
 
-func list(ctx context.Context) (rtext string) {
+func list(ctx context.Context, _ string, _ ...string) (rtext string) {
 	lb := &points.Leaderboard{}
 	if slb, err := getLeaderboard(ctx); err == nil {
 		lb.Headers = slb.Headers
@@ -94,7 +84,7 @@ func list(ctx context.Context) (rtext string) {
 	return
 }
 
-func initBoard(ctx context.Context, commands []string) (rtext string) {
+func initBoard(ctx context.Context, _ string, commands ...string) (rtext string) {
 	rtext = "leaderboard exists!"
 	if _, err := getLeaderboard(ctx); err != nil {
 		if initErr := initLeaderboard(ctx, commands[1:]); err != nil {
@@ -106,10 +96,14 @@ func initBoard(ctx context.Context, commands []string) (rtext string) {
 	return
 }
 
-func add(ctx context.Context, commands []string) string {
+func add(ctx context.Context, user string, commands ...string) string {
 	// commands{cmd, name, num}
 	if len(commands) != 2 {
 		return "aww man! please use the format `/points add slackbot`"
+	}
+
+	if strings.EqualFold(commands[1], user) {
+		return fmt.Sprintf("sorry %s! you cannot add points to yourself", user)
 	}
 
 	name := commands[1]
@@ -127,6 +121,20 @@ func add(ctx context.Context, commands []string) string {
 	return fmt.Sprintf("alright! added a point to %s", strings.Title(commands[1]))
 }
 
-func match(command, matcher string) bool {
-	return strings.EqualFold(command, matcher)
+func unknown(ctx context.Context, user string, commands ...string) string {
+	log.Infof(ctx, "%s not a recognised command", commands[0])
+	return fmt.Sprintf("awww man! sorry %s but %s is not a supported command", user, commands[0])
+}
+
+func matcher(c string) operation {
+	switch {
+	case strings.EqualFold("list", c):
+		return list
+	case strings.EqualFold("add", c):
+		return add
+	case strings.EqualFold("init", c):
+		return initBoard
+	default:
+		return unknown
+	}
 }
