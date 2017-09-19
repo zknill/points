@@ -3,3 +3,5 @@
 *.iml
 *.json
 points
+appengine/environment.yaml
+vendor

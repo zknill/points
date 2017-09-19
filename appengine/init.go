@@ -1,7 +1,11 @@
 package appengine
 
-import "github.com/zknill/points/integration"
+import (
+	"net/http"
+
+	"github.com/zknill/points"
+)
 
 func init() {
-	points.Run()
+	http.HandleFunc("/command", points.Handler)
 }
