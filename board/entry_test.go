@@ -36,11 +36,10 @@ func Test_aeEntry_Score(t *testing.T) {
 
 func Test_aeEntry_Add(t *testing.T) {
 	tests := []struct {
-		name    string
-		aee     *aeEntry
-		num     int
-		before  int
-		wantErr bool
+		name   string
+		aee    *aeEntry
+		num    int
+		before int
 	}{
 		{name: "add 1 alice", aee: &aeEntry{entryKey("alice")}, num: 1, before: 3},
 		{name: "add 4 bob", aee: &aeEntry{entryKey("bob")}, num: 4, before: 2},
@@ -50,14 +49,15 @@ func Test_aeEntry_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotBefore, err := tt.aee.Score(aectx)
-			if err != nil && errors.Cause(err) != ErrEntryNotFound {
+			_, notFound := errors.Cause(err).(*ErrEntryNotFound)
+			if err != nil && notFound {
 				t.Fatalf("%q. got error check score before, %+v", tt.name, err)
 			}
 			if gotBefore != tt.before {
 				t.Errorf("%q. incorrect score before, want = %v, got = %v", tt.name, tt.before, gotBefore)
 			}
-			if err := tt.aee.Add(aectx, tt.num); err != nil {
-				t.Fatalf("%q. error adding points, %v", tt.name, err)
+			if addErr := tt.aee.Add(aectx, tt.num); addErr != nil {
+				t.Fatalf("%q. error adding points, %v", tt.name, addErr)
 			}
 			gotAfter, err := tt.aee.Score(aectx)
 			if err != nil {

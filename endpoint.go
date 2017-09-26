@@ -8,8 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/zknill/points/board"
+	context2 "golang.org/x/net/context"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 )
 
@@ -33,13 +33,23 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	team := r.PostFormValue("team_domain")
 
 	standings, err := board.Load(ctx, board.NewTeam(team))
-	if err != nil && errors.Cause(err) != datastore.ErrNoSuchEntity {
-		log.Warningf(ctx, "failed to load %+s", err)
-		writeResponse(ctx, w, &slashResponse{
-			ResponseType: "in_channel",
-			Text:         "create a team using `/points init`",
+	if err != nil {
+		r := &slashResponse{
 			// make ephemeral response
-		})
+			ResponseType: "in_channel",
+		}
+
+		var logger func(ctx context2.Context, format string, args ...interface{})
+		switch errors.Cause(err).(type) {
+		case board.ErrBoardNotFound:
+			logger = log.Warningf
+			r.Text = "create a team using `/points init`"
+		default:
+			logger = log.Errorf
+			r.Text = "ack! something failed"
+		}
+		logger(ctx, "failed loading board for team: %s, error: %+s", team, err)
+		writeResponse(ctx, w, r)
 		return
 	}
 
