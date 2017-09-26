@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -36,6 +38,14 @@ type Transacter interface {
 	Transact(ctx context.Context, t func(tc context.Context) error) error
 }
 
+// ErrBoardNotFound represents a not found error for leaderboards
+type ErrBoardNotFound string
+
+// Error implements the Error interface for ErrBoardNotFound
+func (e ErrBoardNotFound) Error() string {
+	return fmt.Sprintf("board not found: %s", string(e))
+}
+
 // Load returns a Leaderboard for a team
 // It uses the appengine datastore as a storage layer.
 func Load(ctx context.Context, team Team) (Leaderboard, error) {
@@ -44,9 +54,10 @@ func Load(ctx context.Context, team Team) (Leaderboard, error) {
 	log.Infof(ctx, "attempt to get standings for key: %s", k)
 	if err := datastore.Get(ctx, k, s); err != nil {
 		if err == datastore.ErrNoSuchEntity {
-			return nil, errors.Wrapf(err, "whoops! couldn't find leaderboard for team %q", team)
+			e := ErrBoardNotFound(fmt.Sprintf("team: %s", team.String()))
+			return nil, errors.Wrap(e, "failed getting leaderboard")
 		}
-		return nil, errors.Wrap(err, "something has failed!")
+		return nil, errors.Wrap(err, "failed getting leaderboard")
 	}
 	s.StandingsKey = k
 	log.Infof(ctx, "successfully got standings for key: %s", k)

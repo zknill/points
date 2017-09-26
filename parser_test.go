@@ -27,26 +27,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestParser(t *testing.T) {
-	type args struct {
-		request string
-	}
-	tests := []struct {
-		name string
-		args args
-		want Command
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Parser(tt.args.request); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Parser() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_add_success(t *testing.T) {
 	tokens := []string{"add", "slackbot"}
 
@@ -128,38 +108,6 @@ func Test_add_error(t *testing.T) {
 	}
 }
 
-func Test_list(t *testing.T) {
-	tests := []struct {
-		name string
-		want Command
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := list(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("list() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_reset(t *testing.T) {
-	tests := []struct {
-		name string
-		want Command
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := reset(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("reset() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_errorMessage(t *testing.T) {
 	tests := []struct {
 		name string
@@ -231,4 +179,8 @@ func (e *mockEntry) Add(ctx context.Context, num int) error {
 
 func (e *mockEntry) Score(ctx context.Context) (int, error) {
 	return e.score(ctx)
+}
+
+func (e *mockEntry) Delete(ctx context.Context) error {
+	panic("implement me!")
 }
