@@ -23,7 +23,7 @@ type Leaderboard interface {
 	Entry(ctx context.Context, name string) Entry
 	// Out gets all the Entrys in the Leaderboard
 	// and writes their names and points to w as an ascii table
-	Out(ctx context.Context, w io.Writer)
+	Out(ctx context.Context, w io.Writer) error
 	// Reset updates all the Entrys in the Leaderboard to have a zero score
 	// Entry names are maintained
 	Reset(ctx context.Context) error
@@ -39,17 +39,19 @@ type Transacter interface {
 // Load returns a Leaderboard for a team
 // It uses the appengine datastore as a storage layer.
 func Load(ctx context.Context, team Team) (Leaderboard, error) {
-	k := team.key(ctx)
-	s := new(aeLeaderBoard)
-	log.Infof(ctx, "attempt to get standings for key: %s", k)
-	if err := datastore.Get(ctx, k, s); err != nil {
+	s := &aeLeaderBoard{
+		StandingsKey: team.key(ctx),
+		Team: team.String(),
+	}
+	log.Infof(ctx, "attempt to get standings for key: %s", s.StandingsKey)
+	if err := datastore.Get(ctx, s.StandingsKey, s); err != nil {
 		if err == datastore.ErrNoSuchEntity {
-			return nil, errors.Wrapf(err, "whoops! couldn't find leaderboard for team %q", team)
+			log.Infof(ctx, "couldn't find leaderboard for team %q", team.String())
+			return s, nil
 		}
 		return nil, errors.Wrap(err, "something has failed!")
 	}
-	s.StandingsKey = k
-	log.Infof(ctx, "successfully got standings for key: %s", k)
+	log.Infof(ctx, "successfully got standings for key: %s", s.StandingsKey)
 	return s, nil
 }
 
@@ -94,6 +96,7 @@ func (t Team) key(ctx context.Context) *datastore.Key {
 var _ Leaderboard = (*aeLeaderBoard)(nil)
 var _ Transacter = (*aeLeaderBoard)(nil)
 
+// TODO(zknill): add safety for if the zero value of struct is used.
 type aeLeaderBoard struct {
 	StandingsKey *datastore.Key `datastore:"-"`
 	Team         string
@@ -101,38 +104,54 @@ type aeLeaderBoard struct {
 }
 
 // Transact implements the Transactor interface for *aeLeaderboard
-func (i *aeLeaderBoard) Transact(ctx context.Context, t func(tc context.Context) error) error {
+func (lb *aeLeaderBoard) Transact(ctx context.Context, t func(tc context.Context) error) error {
 	return datastore.RunInTransaction(ctx, t, nil)
 }
 
 // Entry implements the Leaderboard interface and sets up the information to retrieve an entry.
 // Note that the entries information is not accessed until a method is called on that entry.
-func (i *aeLeaderBoard) Entry(ctx context.Context, name string) Entry {
-	key := datastore.NewKey(ctx, kindEntry, strings.ToLower(name), 0, i.StandingsKey)
+func (lb *aeLeaderBoard) Entry(ctx context.Context, name string) Entry {
+	key := datastore.NewKey(ctx, kindEntry, strings.ToLower(name), 0, lb.StandingsKey)
 	return &aeEntry{entryKey: key}
 }
 
 // Out implements Leaderboard and writes all the entries for this leaderboard in a slack friendly way.
-func (i *aeLeaderBoard) Out(ctx context.Context, w io.Writer) {
-	query := datastore.NewQuery(kindEntry).Ancestor(i.StandingsKey)
+func (lb *aeLeaderBoard) Out(ctx context.Context, w io.Writer) error {
+	entries, err := lb.entries(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed getting entries for Out")
+	}
+
+	hdrs := headersOrDefault(lb.Headers)
+	writeTable(w, hdrs, entries)
+	return nil
+}
+
+func (lb *aeLeaderBoard) entries(ctx context.Context) ([]*storedEntry, error) {
+	if lb.StandingsKey == nil {
+		return make([]*storedEntry, 0), nil
+	}
+
+	query := datastore.NewQuery(kindEntry).Ancestor(lb.StandingsKey)
 	results := query.Run(ctx)
+
 	var entries []*storedEntry
 	for {
 		entry := new(storedEntry)
 		if _, err := results.Next(entry); err != nil {
 			if err == datastore.Done {
-				break
+				log.Infof(ctx, "found %d entries for key %s", len(entries), lb.StandingsKey)
+				return entries, nil
 			}
-			log.Errorf(ctx, err.Error())
+			return nil, errors.Wrapf(err, "failed getting entries for board ancestor: %v", lb.StandingsKey)
 		}
 		entries = append(entries, entry)
 	}
-	writeTable(w, i.Headers, entries)
 }
 
 // Reset implements Leaderboard, it allows all the associated entries to have their points set to zero.
-func (i *aeLeaderBoard) Reset(ctx context.Context) error {
-	query := datastore.NewQuery(kindEntry).Ancestor(i.StandingsKey)
+func (lb *aeLeaderBoard) Reset(ctx context.Context) error {
+	query := datastore.NewQuery(kindEntry).Ancestor(lb.StandingsKey)
 	results := query.Run(ctx)
 	stored := new(storedEntry)
 	for {
@@ -166,4 +185,11 @@ func writeTable(w io.Writer, headers []string, entries []*storedEntry) {
 		tw.Append([]string{entry.Name, strconv.Itoa(entry.Points)})
 	}
 	tw.Render()
+}
+
+func headersOrDefault(hdrs []string) []string {
+	if len(hdrs) < 1 {
+		return defaultHeaders
+	}
+	return hdrs
 }

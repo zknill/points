@@ -40,7 +40,6 @@ func Test_aeEntry_Add(t *testing.T) {
 		aee     *aeEntry
 		num     int
 		before  int
-		wantErr bool
 	}{
 		{name: "add 1 alice", aee: &aeEntry{entryKey("alice")}, num: 1, before: 3},
 		{name: "add 4 bob", aee: &aeEntry{entryKey("bob")}, num: 4, before: 2},
@@ -56,8 +55,8 @@ func Test_aeEntry_Add(t *testing.T) {
 			if gotBefore != tt.before {
 				t.Errorf("%q. incorrect score before, want = %v, got = %v", tt.name, tt.before, gotBefore)
 			}
-			if err := tt.aee.Add(aectx, tt.num); err != nil {
-				t.Fatalf("%q. error adding points, %v", tt.name, err)
+			if aerr := tt.aee.Add(aectx, tt.num); aerr != nil {
+				t.Fatalf("%q. error adding points, %v", tt.name, aerr)
 			}
 			gotAfter, err := tt.aee.Score(aectx)
 			if err != nil {

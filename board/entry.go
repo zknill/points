@@ -10,7 +10,7 @@ import (
 const kindEntry string = "Entries"
 
 // ErrEntryNotFound represents and entry that could not be found.
-var ErrEntryNotFound error = errors.New("entry: not found")
+var ErrEntryNotFound = errors.New("entry: not found")
 
 // Entry represents a single row in a Leaderboard
 type Entry interface {

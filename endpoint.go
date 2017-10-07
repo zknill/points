@@ -6,11 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/zknill/points/board"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
+	"github.com/pkg/errors"
 )
 
 type slashResponse struct {
@@ -32,18 +31,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	rawCommands := r.PostFormValue("text")
 	team := r.PostFormValue("team_domain")
 
-	standings, err := board.Load(ctx, board.NewTeam(team))
-	if err != nil && errors.Cause(err) != datastore.ErrNoSuchEntity {
-		log.Warningf(ctx, "failed to load %+s", err)
-		writeResponse(ctx, w, &slashResponse{
-			ResponseType: "in_channel",
-			Text:         "create a team using `/points init`",
-			// make ephemeral response
-		})
-		return
-	}
-
-	responseText := Parser(ctx, team, rawCommands)(ctx, standings)
+	msg := Parser(ctx, team, rawCommands)
+	responseText := response(ctx, msg, team)
 
 	resp := &slashResponse{
 		ResponseType: "in_channel",
@@ -53,10 +42,39 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(ctx, w, resp)
 }
 
+func response(ctx context.Context, msg Message, team string) string {
+	cmd, ok := msg.(Command)
+	if !ok {
+		return msg.String()
+	}
+
+	standings, err := board.Load(ctx, board.NewTeam(team))
+	if err != nil {
+		log.Warningf(ctx, "failed to load %+s", err)
+		return errorMessage(err)
+	}
+
+	resp, err := cmd.Execute(ctx, standings)
+	if err != nil {
+		log.Warningf(ctx, "failed to execute command %T, error: %+s", cmd, err)
+		return msg.String()
+	}
+
+	return resp.String()
+}
+
 func writeResponse(ctx context.Context, w http.ResponseWriter, resp *slashResponse) {
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		log.Errorf(ctx, "Error encoding JSON: %s", err)
 		http.Error(w, "failed!", http.StatusInternalServerError)
 		return
 	}
+}
+
+func errorMessage(err error) string {
+	cause := errors.Cause(err)
+	if msg, ok := cause.(Message); ok {
+		return msg.String()
+	}
+	return errorText
 }
