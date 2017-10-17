@@ -1,4 +1,4 @@
-package points
+package appengine
 
 import (
 	"context"
@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pkg/errors"
-	"github.com/zknill/points/board"
-	context2 "golang.org/x/net/context"
+	"github.com/zknill/points"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 )
@@ -32,32 +30,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	rawCommands := r.PostFormValue("text")
 	team := r.PostFormValue("team_domain")
 
-	standings, err := board.Load(ctx, board.NewTeam(team))
-	if err != nil {
-		r := &slashResponse{
-			// make ephemeral response
-			ResponseType: "in_channel",
-		}
-
-		var logger func(ctx context2.Context, format string, args ...interface{})
-		switch errors.Cause(err).(type) {
-		case board.ErrBoardNotFound:
-			logger = log.Warningf
-			r.Text = "create a team using `/points init`"
-		default:
-			logger = log.Errorf
-			r.Text = "ack! something failed"
-		}
-		logger(ctx, "failed loading board for team: %s, error: %+s", team, err)
-		writeResponse(ctx, w, r)
-		return
-	}
-
-	responseText := Parser(ctx, team, rawCommands)(ctx, standings)
+	msg := points.Controller.Parse(ctx, team, rawCommands)
 
 	resp := &slashResponse{
 		ResponseType: "in_channel",
-		Text:         responseText,
+		Text:         msg,
 	}
 
 	writeResponse(ctx, w, resp)
