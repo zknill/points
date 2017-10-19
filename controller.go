@@ -11,14 +11,22 @@ import (
 
 const errorMessage = "ack! something went wrong"
 
+// Controller is the default points controller
+// It holds a factory for appengine *TeamClients.
 var Controller = &SlackController{
-	factory: ClientFactory{},
+	factory: AppEngineFactory{},
 }
 
+// SlackController is the controller for handling request from
+// a slack slash command. It has a factory for creating *TeamClients
+// that manage the operations of the request.
 type SlackController struct {
-	factory ClientFactory
+	factory AppEngineFactory
 }
 
+// Parse takes a team and a raw request string and will parse and perform
+// the request. It uses the SlackControllers factory method to create a
+// *TeamClient for the lifecycle of the request.
 func (c *SlackController) Parse(ctx context.Context, team string, request string) string {
 
 	tokens := strings.Fields(request)
@@ -41,7 +49,7 @@ func (c *SlackController) Parse(ctx context.Context, team string, request string
 	return fmt.Sprintf("unknown command %q", tokens[0])
 }
 
-func add(ctx context.Context, client *Client, tokens []string) string {
+func add(ctx context.Context, client *TeamClient, tokens []string) string {
 
 	// check tokens length
 
@@ -55,7 +63,7 @@ func add(ctx context.Context, client *Client, tokens []string) string {
 	return fmt.Sprintf("added a point to %q", name.String())
 }
 
-func list(ctx context.Context, client *Client) string {
+func list(ctx context.Context, client *TeamClient) string {
 	var buf bytes.Buffer
 	if err := client.Scores(ctx, &buf); err != nil {
 		return errorMessage
@@ -64,7 +72,7 @@ func list(ctx context.Context, client *Client) string {
 	return buf.String()
 }
 
-func reset(ctx context.Context, client *Client) string {
+func reset(ctx context.Context, client *TeamClient) string {
 	if err := client.Reset(ctx); err != nil {
 		return errorMessage
 	}
